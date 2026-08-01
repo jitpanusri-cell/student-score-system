@@ -231,11 +231,10 @@
       <div id="adminAssignView" style="display:none;">
         <div class="mb-2"><input type="text" id="newAssignmentTitle" class="form-control mb-2" placeholder="ชื่อชิ้นงานใหม่"></div>
         <button class="btn btn-action w-100 mb-3" onclick="adminAddAssignmentSubmit()">เพิ่มชิ้นงาน</button>
-        <div class="mb-2"><input type="text" id="assignStudentId" class="form-control mb-2" placeholder="เลขประจำตัวนักเรียน"></div>
-        <div id="adminAssignmentList"></div>
         <hr>
-        <div class="mb-2"><textarea id="teacherCommentInput" class="form-control mb-2" placeholder="คอมเมนต์ถึงนักเรียนคนนี้..."></textarea></div>
-        <button class="btn btn-action w-100" style="background: var(--gold-accent);" onclick="adminSaveComment()">บันทึกคอมเมนต์</button>
+        <div class="mb-2"><input type="text" id="assignStudentId" class="form-control mb-2" placeholder="กรอกเลขประจำตัวนักเรียนแล้วกด Enter" onkeydown="if(event.key==='Enter'){event.preventDefault();adminLoadStudentAssignments();}"></div>
+        <button class="btn btn-sm btn-outline-secondary w-100 mb-3" onclick="adminLoadStudentAssignments()">โหลดรายการชิ้นงานของนักเรียนคนนี้</button>
+        <div id="adminAssignmentList"></div>
         <div id="adminAssignMsg" class="mt-2"></div>
       </div>
     </div>
@@ -360,13 +359,17 @@
         const isDone = task.status === 'ส่งแล้ว';
         const badgeClass = isDone ? 'status-done' : 'status-missing';
         const icon = isDone ? 'fa-circle-check text-success' : 'fa-circle-xmark text-danger';
+        const commentHtml = task.comment ? `<div class="small text-muted mt-1" style="padding-left:22px;"><i class="fa-solid fa-comment-dots me-1"></i>${task.comment}</div>` : '';
         taskContainer.innerHTML += `
-          <div class="task-card shadow-sm">
-            <div>
-              <i class="fa-solid ${icon} me-2"></i>
-              <span class="fw-semibold small">${task.title}</span>
+          <div class="task-card shadow-sm" style="display:block;">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <i class="fa-solid ${icon} me-2"></i>
+                <span class="fw-semibold small">${task.title}</span>
+              </div>
+              <span class="badge-status ${badgeClass}">${task.status}</span>
             </div>
-            <span class="badge-status ${badgeClass}">${task.status}</span>
+            ${commentHtml}
           </div>`;
       });
     }
@@ -585,47 +588,64 @@
     if (!title) { msg.innerHTML = '<span class="text-danger">กรุณาระบุชื่อชิ้นงาน</span>'; return; }
     adminApi('adminAddAssignment', { sheet: adminSelectedSheet, title }).then(res => {
       msg.innerHTML = `<span class="${res.status === 'success' ? 'text-success' : 'text-danger'}">${res.message}</span>`;
-      if (res.status === 'success') { document.getElementById('newAssignmentTitle').value = ''; loadAdminAssignmentsInfo(); }
+      if (res.status === 'success') { document.getElementById('newAssignmentTitle').value = ''; }
     });
   }
 
   function loadAdminAssignmentsInfo() {
-    adminApi('adminOverview', { sheet: adminSelectedSheet }).then(res => {
-      if (res.status !== 'success') return;
-      window.__adminAssignments = res.assignments;
-      renderAdminAssignmentList();
-    });
+    document.getElementById('adminAssignmentList').innerHTML = '';
+    document.getElementById('assignStudentId').value = '';
   }
 
-  function renderAdminAssignmentList() {
-    const list = window.__adminAssignments || [];
-    const el = document.getElementById('adminAssignmentList');
+  function adminLoadStudentAssignments() {
     const studentId = document.getElementById('assignStudentId').value.trim();
-    if (list.length === 0) { el.innerHTML = '<div class="text-muted small">ยังไม่มีชิ้นงานในห้องนี้</div>'; return; }
-    el.innerHTML = list.map(a => `
-      <div class="admin-card d-flex justify-content-between align-items-center">
-        <span class="small">${a.title}</span>
-        <button class="btn btn-sm btn-outline-success" onclick="adminToggleStatus(${a.colIndex}, true)" ${!studentId ? 'disabled' : ''}>ส่งแล้ว</button>
-        <button class="btn btn-sm btn-outline-danger" onclick="adminToggleStatus(${a.colIndex}, false)" ${!studentId ? 'disabled' : ''}>ยังไม่ส่ง</button>
+    const el = document.getElementById('adminAssignmentList');
+    if (!studentId) { el.innerHTML = '<div class="text-danger small">กรุณากรอกเลขประจำตัวนักเรียนก่อน</div>'; return; }
+    el.innerHTML = '<div class="text-center p-3 text-muted">กำลังโหลด...</div>';
+    callApi('login', { sheet: adminSelectedSheet, id: studentId }).then(res => {
+      if (res.status !== 'success') { el.innerHTML = `<div class="text-danger small">${res.message}</div>`; return; }
+      window.__adminStudentAssignments = res.assignments;
+      renderAdminAssignmentList(res.info.name);
+    }).catch(() => { el.innerHTML = '<div class="text-danger small">เชื่อมต่อระบบไม่สำเร็จ</div>'; });
+  }
+
+  function renderAdminAssignmentList(studentName) {
+    const list = window.__adminStudentAssignments || [];
+    const el = document.getElementById('adminAssignmentList');
+    if (list.length === 0) { el.innerHTML = '<div class="text-muted small">ห้องเรียนนี้ยังไม่มีชิ้นงาน</div>'; return; }
+    let html = studentName ? `<div class="small fw-bold mb-2">นักเรียน: ${studentName}</div>` : '';
+    html += list.map(a => `
+      <div class="admin-card">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="small fw-semibold">${a.title}</span>
+          <span>
+            <button class="btn btn-sm ${a.status === 'ส่งแล้ว' ? 'btn-success' : 'btn-outline-success'}" onclick="adminToggleStatus(${a.colIndex}, true)">ส่งแล้ว</button>
+            <button class="btn btn-sm ${a.status !== 'ส่งแล้ว' ? 'btn-danger' : 'btn-outline-danger'}" onclick="adminToggleStatus(${a.colIndex}, false)">ยังไม่ส่ง</button>
+          </span>
+        </div>
+        <div class="input-group input-group-sm">
+          <input type="text" class="form-control" id="cmt-${a.colIndex}" value="${(a.comment || '').replace(/"/g, '&quot;')}" placeholder="คอมเมนต์ชิ้นงานนี้...">
+          <button class="btn btn-outline-primary" onclick="adminSaveAssignmentComment(${a.colIndex})">บันทึก</button>
+        </div>
       </div>`).join('');
+    el.innerHTML = html;
   }
 
   function adminToggleStatus(colIndex, done) {
     const studentId = document.getElementById('assignStudentId').value.trim();
     if (!studentId) return alert('กรุณากรอกเลขประจำตัวนักเรียนก่อน');
     adminApi('adminSetStatus', { sheet: adminSelectedSheet, id: studentId, colIndex, done }).then(res => {
-      alert(res.message);
+      if (res.status === 'success') adminLoadStudentAssignments();
+      else alert(res.message);
     });
   }
 
-  function adminSaveComment() {
+  function adminSaveAssignmentComment(colIndex) {
     const studentId = document.getElementById('assignStudentId').value.trim();
-    const comment = document.getElementById('teacherCommentInput').value.trim();
-    const msg = document.getElementById('adminAssignMsg');
-    if (!studentId || !comment) { msg.innerHTML = '<span class="text-danger">กรุณากรอกเลขประจำตัวและคอมเมนต์</span>'; return; }
-    adminApi('adminSetComment', { sheet: adminSelectedSheet, id: studentId, comment }).then(res => {
-      msg.innerHTML = `<span class="${res.status === 'success' ? 'text-success' : 'text-danger'}">${res.message}</span>`;
-      if (res.status === 'success') document.getElementById('teacherCommentInput').value = '';
+    const comment = document.getElementById('cmt-' + colIndex).value.trim();
+    if (!studentId) return alert('กรุณากรอกเลขประจำตัวนักเรียนก่อน');
+    adminApi('adminSetAssignmentComment', { sheet: adminSelectedSheet, id: studentId, colIndex, comment }).then(res => {
+      alert(res.message);
     });
   }
 </script>
