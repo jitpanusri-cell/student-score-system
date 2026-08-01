@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบตรวจสอบคะแนนและสถานะงานนักเรียน</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  :root {
+    --navy-primary: #002366;
+    --navy-light: #003399;
+    --gold-accent: #C5A059;
+    --slate-gray: #F4F6F9;
+  }
+  body {
+    font-family: 'Sarabun', sans-serif;
+    background-color: var(--slate-gray);
+    color: #2D3748;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .main-wrapper { flex: 1; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .app-container {
+    background: #ffffff; border-radius: 24px; box-shadow: 0 15px 35px rgba(0,35,102,0.06);
+    width: 100%; max-width: 500px; overflow: hidden; border: 1px solid rgba(0,35,102,0.08);
+  }
+  .brand-banner {
+    background: linear-gradient(135deg, var(--navy-primary), var(--navy-light));
+    color: #fff; padding: 35px 24px; text-align: center;
+  }
+  .brand-banner h4 { font-weight: 700; font-size: 1.3rem; margin-bottom: 8px; line-height: 1.4; }
+  .brand-banner p { font-size: 0.9rem; opacity: 0.9; margin-bottom: 0; line-height: 1.5; }
+  .digit-group { display: flex; justify-content: space-between; gap: 10px; max-width: 320px; margin: 20px auto; }
+  .digit-box {
+    width: 50px; height: 55px; background-color: #F8FAFC; border: 2px solid #E2E8F0; border-radius: 12px;
+    text-align: center; font-size: 1.4rem; font-weight: 700; color: var(--navy-primary); transition: all 0.2s ease;
+  }
+  .digit-box:focus { border-color: var(--navy-light); background-color: #fff; box-shadow: 0 0 0 3px rgba(0,51,153,0.1); outline: none; }
+  .btn-action { background: var(--navy-primary); color: #fff; font-weight: 600; padding: 14px; border-radius: 14px; border: none; transition: all 0.2s ease; }
+  .btn-action:hover { background: var(--navy-light); color: #fff; transform: translateY(-1px); }
+  .app-navigation { display: flex; background: #F1F5F9; padding: 6px; border-radius: 16px; margin-bottom: 25px; }
+  .nav-pill-item { flex: 1; text-align: center; padding: 12px 4px; font-weight: 600; font-size: 0.82rem; color: #64748B; text-decoration: none; border-radius: 12px; border: none; background: none; transition: 0.2s; }
+  .nav-pill-item.active { background: #fff; color: var(--navy-primary); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+  .metric-row { display: flex; justify-content: space-between; align-items: center; background: #F8FAFC; padding: 16px; border-radius: 16px; margin-bottom: 12px; border-left: 5px solid var(--navy-light); }
+  .metric-title { font-size: 0.9rem; font-weight: 600; color: #4A5568; }
+  .metric-val { font-size: 1.15rem; font-weight: 700; color: var(--navy-primary); }
+  .grade-box-highlight { background: linear-gradient(135deg, #FFFDF5, #FFF9E6); border: 2px dashed var(--gold-accent); border-radius: 20px; padding: 24px; text-align: center; margin-top: 20px; }
+  .task-card { background: #fff; border: 1px solid #E2E8F0; border-radius: 14px; padding: 14px 18px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+  .badge-status { padding: 6px 14px; border-radius: 20px; font-size: 0.82rem; font-weight: 600; }
+  .status-done { background: #E6F4EA; color: #137333; }
+  .status-missing { background: #FCE8E6; color: #C5221F; }
+  .slide-premium-card { background: #fff; border-radius: 18px; border: 1px solid #E2E8F0; margin-bottom: 20px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+  .slide-embed-container { position: relative; width: 100%; height: 230px; background: #e2e8f0; }
+  .slide-embed-container iframe { width: 100%; height: 100%; border: none; }
+  .slide-card-details { padding: 15px 18px; display: flex; align-items: center; justify-content: space-between; background: #fff; }
+  .slide-badge-title { font-size: 0.88rem; font-weight: 600; color: #1A202C; margin-bottom: 0; }
+  .btn-slide-expand { background: var(--navy-primary); color: #fff; padding: 6px 12px; font-size: 0.78rem; font-weight: 600; border-radius: 8px; text-decoration: none; }
+  .btn-slide-expand:hover { background: var(--navy-light); color: #fff; }
+  .subject-divider { font-size: 0.85rem; font-weight: 700; color: var(--navy-light); margin: 15px 0 12px; border-bottom: 2px solid #E2E8F0; padding-bottom: 6px; }
+  .quote-footer { font-style: italic; font-size: 0.8rem; color: #718096; text-align: center; padding: 20px; line-height: 1.5; background: #F8FAFC; border-top: 1px solid #E2E8F0; }
+  #dashboardSection { display: none; }
+</style>
+</head>
+<body>
+
+<div class="main-wrapper">
+  <div class="app-container">
+
+    <div class="brand-banner">
+      <h4>ระบบตรวจสอบคะแนนและสถานะงาน</h4>
+      <p>ครูจิตประภัสร์ ศรีวรรณ (ครูเก่ง)<br>กลุ่มสาระการเรียนรู้สังคมศึกษา แลกวางแผนงบประมาณ<br>โรงเรียนมหาวชิราวุธ จังหวัดสงขลา</p>
+    </div>
+
+    <div id="loginSection" class="p-4">
+      <div class="mb-4">
+        <label class="form-label small fw-bold text-secondary">ระดับชั้น / รายวิชาเรียน</label>
+        <select id="classDropdown" class="form-select form-control-lg border-2 shadow-none" style="border-radius:12px;">
+          <option value="">กำลังโหลดข้อมูลห้องเรียน...</option>
+        </select>
+      </div>
+
+      <div class="mb-4 text-center">
+        <label class="form-label small fw-bold text-secondary d-block text-start">เลขประจำตัวนักเรียน (5 หลัก)</label>
+        <div class="digit-group" id="studentIdGroup">
+          <input type="text" class="digit-box" maxlength="1" inputmode="numeric" pattern="\d*">
+          <input type="text" class="digit-box" maxlength="1" inputmode="numeric" pattern="\d*">
+          <input type="text" class="digit-box" maxlength="1" inputmode="numeric" pattern="\d*">
+          <input type="text" class="digit-box" maxlength="1" inputmode="numeric" pattern="\d*">
+          <input type="text" class="digit-box" maxlength="1" inputmode="numeric" pattern="\d*">
+        </div>
+      </div>
+
+      <button class="btn btn-action w-100 btn-lg shadow-sm" onclick="processLogin()" id="loginActionBtn">
+        <i class="fa-solid fa-right-to-bracket me-2"></i>เข้าสู่ระบบ
+      </button>
+      <div id="loginErrorMessage" class="alert alert-danger mt-3 text-center small p-2 rounded-3" style="display:none"></div>
+    </div>
+
+    <div id="dashboardSection">
+      <div class="p-3 bg-light text-center border-bottom">
+        <span class="badge px-3 py-2 mb-2 rounded-pill fs-7" style="background: var(--navy-primary);" id="labelSubjectDisplay">-</span>
+        <h5 class="mb-1 fw-bold text-dark" id="labelNameDisplay">-</h5>
+        <small class="text-muted">เลขประจำตัว: <span id="labelIdDisplay">-</span> | ชั้นเรียน: <span id="labelClassDisplay">-</span></small>
+      </div>
+
+      <div class="p-4">
+        <div class="app-navigation">
+          <button class="nav-pill-item active" id="tabScoreBtn" onclick="changeSubView('score')">คะแนนเก็บ</button>
+          <button class="nav-pill-item" id="tabTaskBtn" onclick="changeSubView('task')">เช็คชิ้นงาน</button>
+          <button class="nav-pill-item" id="tabSlidesBtn" onclick="changeSubView('slides')">สไลด์สอน</button>
+          <button class="nav-pill-item" id="tabEvalBtn" onclick="changeSubView('eval')">ประเมินครู</button>
+        </div>
+
+        <div id="scoreSubView">
+          <div id="scoreMetricsContainer"></div>
+          <div class="grade-box-highlight">
+            <div class="text-muted small fw-medium">ระดับผลการเรียน (เกรด)</div>
+            <div class="display-3 fw-bold my-1" style="color: var(--navy-primary);" id="labelGradeDisplay">-</div>
+          </div>
+        </div>
+
+        <div id="taskSubView" style="display:none;">
+          <div id="taskCardsContainer"></div>
+        </div>
+
+        <div id="slidesSubView" style="display:none;">
+          <div id="slidesCardsContainer">
+            <div class="text-center p-4 text-muted">กำลังโหลดรายการสไลด์ประกอบการเรียน...</div>
+          </div>
+        </div>
+
+        <div id="evalSubView" style="display:none;">
+          <div class="card p-3 border-0 bg-light" style="border-radius:16px;">
+            <h6 class="fw-bold text-center mb-2" style="color: var(--navy-primary);">แบบประเมินและเสนอแนะคุณครูผู้สอน</h6>
+            <p class="text-muted text-center" style="font-size:0.82rem;">ความคิดเห็นของนักเรียนจะถูกเก็บเป็นความลับ เพื่อนำไปพัฒนาการเรียนการสอนให้ดียิ่งขึ้น</p>
+            <div class="mb-3">
+              <textarea id="evaluationTextarea" class="form-control border-0 bg-white p-3 shadow-none" rows="4" style="border-radius:12px;" placeholder="พิมพ์ความคิดเห็นหรือเสนอแนะถึงคุณครูที่นี่..."></textarea>
+            </div>
+            <button class="btn btn-action w-100 fw-bold" style="background: var(--gold-accent);" onclick="sendEvaluationData()">
+              <i class="fa-solid fa-paper-plane me-2"></i>ส่งความคิดเห็น
+            </button>
+          </div>
+        </div>
+
+        <button class="btn btn-link w-100 mt-4 text-secondary text-decoration-none small" onclick="triggerSignOutConfirmation()">
+          <i class="fa-solid fa-sign-out-alt me-1"></i> ออกจากระบบ
+        </button>
+      </div>
+    </div>
+
+    <div class="quote-footer">
+      "People Face Tradeoffs" คำเรียนเปิดบทแรกกล่าวไว้ในตำราเศรษฐศาสตร์เสมอ<br>
+      <span class="fw-bold" style="font-size: 11px; color: var(--gold-accent);">10 Principles of Economics, Gregory Mankiw, Principles of Economics</span>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // ตั้งค่า URL ของ Apps Script Web App ที่นี่
+  const API_URL = 'https://script.google.com/macros/s/AKfycbwIzhwbp1tRr3nOaX-ks1pAsp4SixSmIqpwq5imJDla9ywqZPYrH4EsOWFCes7zQfEs/exec';
+
+  let globalActiveSheet = "";
+  let globalActiveId = "";
+  let globalUserSubjectType = "";
+
+  async function callApi(action, params) {
+    const url = new URL(API_URL);
+    url.searchParams.set('action', action);
+    for (const key in params) url.searchParams.set(key, params[key]);
+    const res = await fetch(url.toString());
+    return res.json();
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    callApi('getClasses', {}).then(classes => {
+      const select = document.getElementById('classDropdown');
+      select.innerHTML = '<option value="">-- เลือกระดับชั้นและรายวิชาเรียน --</option>';
+      classes.forEach(c => {
+        select.innerHTML += `<option value="${c.sheetName}">${c.displayName}</option>`;
+      });
+    }).catch(() => {
+      const select = document.getElementById('classDropdown');
+      select.innerHTML = '<option value="">โหลดรายชื่อห้องเรียนไม่สำเร็จ</option>';
+    });
+
+    const container = document.getElementById('studentIdGroup');
+    const boxes = container.querySelectorAll('.digit-box');
+    boxes.forEach((box, index) => {
+      box.addEventListener('input', () => {
+        if (box.value.length === 1 && index < boxes.length - 1) boxes[index + 1].focus();
+      });
+      box.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && box.value.length === 0 && index > 0) boxes[index - 1].focus();
+      });
+    });
+  });
+
+  function getCombinedStudentId() {
+    let id = "";
+    document.querySelectorAll('.digit-box').forEach(box => { id += box.value; });
+    return id.trim();
+  }
+
+  function processLogin() {
+    const sheet = document.getElementById('classDropdown').value;
+    const id = getCombinedStudentId();
+    const btn = document.getElementById('loginActionBtn');
+    const err = document.getElementById('loginErrorMessage');
+
+    if (!sheet || id.length < 5) {
+      alert('กรุณาเลือกวิชาเรียน และกรอกเลขประจำตัวนักเรียนให้ครบทั้ง 5 ช่องครับ');
+      return;
+    }
+
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>กำลังเข้าสู่ระบบ...';
+    btn.disabled = true;
+    err.style.display = 'none';
+
+    callApi('login', { sheet, id }).then(res => {
+      btn.innerHTML = '<i class="fa-solid fa-right-to-bracket me-2"></i>เข้าสู่ระบบ';
+      btn.disabled = false;
+
+      if (res.status === 'success') {
+        globalActiveSheet = res.info.rawSheet;
+        globalActiveId = id;
+        globalUserSubjectType = res.subjectType;
+        renderDashboardData(res);
+      } else {
+        err.innerText = res.message;
+        err.style.display = 'block';
+      }
+    }).catch(() => {
+      btn.innerHTML = '<i class="fa-solid fa-right-to-bracket me-2"></i>เข้าสู่ระบบ';
+      btn.disabled = false;
+      err.innerText = 'เชื่อมต่อระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง';
+      err.style.display = 'block';
+    });
+  }
+
+  function renderDashboardData(res) {
+    document.getElementById('loginSection').style.display = 'none';
+    document.getElementById('dashboardSection').style.display = 'block';
+
+    document.getElementById('labelSubjectDisplay').innerText = res.subject;
+    document.getElementById('labelNameDisplay').innerText = res.info.name;
+    document.getElementById('labelIdDisplay').innerText = res.info.id;
+    document.getElementById('labelClassDisplay').innerText = res.info.class;
+    document.getElementById('labelGradeDisplay').innerText = res.scores.grade;
+
+    const metricsContainer = document.getElementById('scoreMetricsContainer');
+    const labels = [
+      { key: 'ก่อนกลางภาค (30)', val: res.scores.pre },
+      { key: 'กลางภาค (20)', val: res.scores.mid },
+      { key: 'หลังกลางภาค (20)', val: res.scores.post },
+      { key: 'ปลายภาค (20)', val: res.scores.final },
+      { key: 'คะแนนบวกพิเศษ', val: res.scores.bonus }
+    ];
+    metricsContainer.innerHTML = '';
+    labels.forEach(item => {
+      metricsContainer.innerHTML += `
+        <div class="metric-row">
+          <span class="metric-title">${item.key}</span>
+          <span class="metric-val">${item.val}</span>
+        </div>`;
+    });
+
+    const taskContainer = document.getElementById('taskCardsContainer');
+    taskContainer.innerHTML = '';
+    if (res.assignments.length === 0) {
+      taskContainer.innerHTML = '<div class="text-center text-muted py-4">ห้องเรียนนี้ยังไม่มีการกำหนดชิ้นงานในระบบ</div>';
+    } else {
+      res.assignments.forEach(task => {
+        const isDone = task.status === 'ส่งแล้ว';
+        const badgeClass = isDone ? 'status-done' : 'status-missing';
+        const icon = isDone ? 'fa-circle-check text-success' : 'fa-circle-xmark text-danger';
+        taskContainer.innerHTML += `
+          <div class="task-card shadow-sm">
+            <div>
+              <i class="fa-solid ${icon} me-2"></i>
+              <span class="fw-semibold small">${task.title}</span>
+            </div>
+            <span class="badge-status ${badgeClass}">${task.status}</span>
+          </div>`;
+      });
+    }
+  }
+
+  function changeSubView(view) {
+    document.getElementById('scoreSubView').style.display = view === 'score' ? 'block' : 'none';
+    document.getElementById('taskSubView').style.display = view === 'task' ? 'block' : 'none';
+    document.getElementById('slidesSubView').style.display = view === 'slides' ? 'block' : 'none';
+    document.getElementById('evalSubView').style.display = view === 'eval' ? 'block' : 'none';
+
+    document.getElementById('tabScoreBtn').classList.toggle('active', view === 'score');
+    document.getElementById('tabTaskBtn').classList.toggle('active', view === 'task');
+    document.getElementById('tabSlidesBtn').classList.toggle('active', view === 'slides');
+    document.getElementById('tabEvalBtn').classList.toggle('active', view === 'eval');
+
+    if (view === 'slides') loadSlidesPreview();
+  }
+
+  function loadSlidesPreview() {
+    const container = document.getElementById('slidesCardsContainer');
+    container.innerHTML = '<div class="text-center p-4 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>กำลังประมวลผลรายการสไลด์...</div>';
+
+    callApi('slides', {}).then(res => {
+      if (res.status === 'success') {
+        let html = '';
+        const groupConfig = [
+          { id: 'ECON', label: 'รายวิชา ส32101 สังคมศึกษา 3' },
+          { id: 'Finan', label: 'รายวิชา การเงินสู่ธุรกิจโลก' },
+          { id: 'MVSK', label: 'รายวิชา ส23261 มหาวชิราวุธศึกษา 1' }
+        ];
+        const targetGroup = groupConfig.find(g => g.id === globalUserSubjectType);
+        if (targetGroup && res.data[targetGroup.id] && res.data[targetGroup.id].length > 0) {
+          html += `<div class="subject-divider">${targetGroup.label}</div>`;
+          res.data[targetGroup.id].forEach(slide => {
+            html += `
+              <div class="slide-premium-card shadow-sm">
+                <div class="slide-embed-container">
+                  <iframe src="${slide.link}" allow="autoplay"></iframe>
+                </div>
+                <div class="slide-card-details">
+                  <p class="slide-badge-title">${slide.title}</p>
+                  <a href="${slide.link}" target="_blank" class="btn btn-slide-expand">
+                     ขยายใหญ่ <i class="fa-solid fa-arrow-up-right-from-square ms-1" style="font-size:0.7rem;"></i>
+                  </a>
+                </div>
+              </div>`;
+          });
+        }
+        if (html === '') html = '<div class="text-center p-5 text-muted">ยังไม่พบสไลด์ประกอบการเรียนในรายวิชานี้</div>';
+        container.innerHTML = html;
+      } else {
+        container.innerHTML = '<div class="text-center p-4 text-danger">ไม่สามารถโหลดข้อมูลสไลด์ได้</div>';
+      }
+    }).catch(() => {
+      container.innerHTML = '<div class="text-center p-4 text-danger">เชื่อมต่อระบบไม่สำเร็จ</div>';
+    });
+  }
+
+  function sendEvaluationData() {
+    const feedback = document.getElementById('evaluationTextarea').value;
+    if (!feedback.trim()) return alert('กรุณาพิมพ์ข้อความก่อนกดส่งความคิดเห็นถึงคุณครู');
+
+    callApi('evaluate', { sheet: globalActiveSheet, id: globalActiveId, feedback }).then(res => {
+      alert(res.message || res);
+      document.getElementById('evaluationTextarea').value = '';
+      changeSubView('score');
+    }).catch(() => alert('เชื่อมต่อระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง'));
+  }
+
+  function triggerSignOutConfirmation() {
+    if (confirm('คุณแน่ใจหรือไม่ว่าต้องการออกจากระบบ?')) systemSignOut();
+  }
+
+  function systemSignOut() {
+    document.querySelectorAll('.digit-box').forEach(box => box.value = '');
+    document.getElementById('evaluationTextarea').value = '';
+    document.getElementById('dashboardSection').style.display = 'none';
+    document.getElementById('loginSection').style.display = 'block';
+    globalUserSubjectType = "";
+    changeSubView('score');
+  }
+</script>
+</body>
+</html>
