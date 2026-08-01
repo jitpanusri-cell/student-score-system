@@ -31,8 +31,9 @@
     background: linear-gradient(135deg, var(--navy-primary), var(--navy-light));
     color: #fff; padding: 35px 24px; text-align: center;
   }
+  .school-crest { width: 85px; height: auto; margin-bottom: 15px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2)); }
   .brand-banner h4 { font-weight: 700; font-size: 1.3rem; margin-bottom: 8px; line-height: 1.4; }
-  .brand-banner p { font-size: 0.9rem; opacity: 0.9; margin-bottom: 0; line-height: 1.5; } .school-crest { width: 85px; height: auto; margin-bottom: 15px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2)); }
+  .brand-banner p { font-size: 0.9rem; opacity: 0.9; margin-bottom: 0; line-height: 1.5; }
   .digit-group { display: flex; justify-content: space-between; gap: 10px; max-width: 320px; margin: 20px auto; }
   .digit-box {
     width: 50px; height: 55px; background-color: #F8FAFC; border: 2px solid #E2E8F0; border-radius: 12px;
@@ -62,6 +63,23 @@
   .subject-divider { font-size: 0.85rem; font-weight: 700; color: var(--navy-light); margin: 15px 0 12px; border-bottom: 2px solid #E2E8F0; padding-bottom: 6px; }
   .quote-footer { font-style: italic; font-size: 0.8rem; color: #718096; text-align: center; padding: 20px; line-height: 1.5; background: #F8FAFC; border-top: 1px solid #E2E8F0; }
   #dashboardSection { display: none; }
+  .admin-footer-link { font-size: 0.75rem; color: #94A3B8; text-decoration: none; display: block; text-align: center; padding: 10px; }
+  .admin-footer-link:hover { color: var(--navy-light); }
+  .admin-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+  .admin-modal-backdrop.show { display: flex; }
+  .admin-modal { background: #fff; border-radius: 20px; padding: 28px; width: 100%; max-width: 340px; text-align: center; }
+  #adminApp { display: none; min-height: 100vh; background: var(--slate-gray); padding: 16px; }
+  .admin-container { max-width: 700px; margin: 0 auto; background: #fff; border-radius: 20px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,35,102,0.06); }
+  .admin-header { background: linear-gradient(135deg, var(--navy-primary), var(--navy-light)); color: #fff; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+  .admin-body { padding: 20px; }
+  .admin-tabs { display: flex; flex-wrap: wrap; gap: 6px; background: #F1F5F9; padding: 6px; border-radius: 14px; margin-bottom: 20px; }
+  .admin-tab-item { flex: 1; min-width: 90px; text-align: center; padding: 10px 4px; font-weight: 600; font-size: 0.78rem; color: #64748B; border: none; background: none; border-radius: 10px; }
+  .admin-tab-item.active { background: #fff; color: var(--navy-primary); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+  .admin-card { background: #F8FAFC; border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; border-left: 4px solid var(--navy-light); }
+  .admin-stat-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin-bottom: 16px; }
+  .admin-stat-box { background: #F8FAFC; border-radius: 12px; padding: 12px; text-align: center; }
+  .admin-stat-box .val { font-size: 1.3rem; font-weight: 700; color: var(--navy-primary); }
+  .admin-stat-box .lbl { font-size: 0.72rem; color: #64748B; }
 </style>
 </head>
 <body>
@@ -70,7 +88,10 @@
   <div class="app-container">
 
     <div class="brand-banner">
-      <img src="https://lh3.googleusercontent.com/d/1PVf5EA7ntHrhJBLbwOuobqWfd9mvscY8" onerror="this.onerror=null; this.src='https://drive.google.com/uc?export=view&id=1PVf5EA7ntHrhJBLbwOuobqWfd9mvscY8';" class="school-crest" alt="โรงเรียนมหาวชิราวุธ"><h4>ระบบตรวจสอบคะแนนและสถานะงาน</h4>
+      <img src="https://lh3.googleusercontent.com/d/1PVf5EA7ntHrhJBLbwOuobqWfd9mvscY8"
+           onerror="this.onerror=null; this.src='https://drive.google.com/uc?export=view&id=1PVf5EA7ntHrhJBLbwOuobqWfd9mvscY8';"
+           class="school-crest" alt="โรงเรียนมหาวชิราวุธ">
+      <h4>ระบบตรวจสอบคะแนนและสถานะงาน</h4>
       <p>ครูจิตรภาณุ ศรีหวัง (ครูเก่ง)<br>กลุ่มสาระการเรียนรู้สังคมศึกษา ศาสนา และวัฒนธรรม<br>โรงเรียนมหาวชิราวุธ จังหวัดสงขลา</p>
     </div>
 
@@ -156,6 +177,68 @@
       <span class="fw-bold" style="font-size: 11px; color: var(--gold-accent);">10 Principles of Economics, Gregory Mankiw, Principles of Economics</span>
     </div>
 
+  </div>
+  <a href="#" class="admin-footer-link" onclick="openAdminLogin(event)">สำหรับครู/แอดมิน</a>
+</div>
+
+<div class="admin-modal-backdrop" id="adminLoginModal">
+  <div class="admin-modal">
+    <h6 class="fw-bold mb-3">เข้าสู่ระบบแอดมิน</h6>
+    <input type="password" id="adminPinInput" class="form-control text-center mb-3" placeholder="รหัสผ่าน" style="border-radius:12px;">
+    <button class="btn btn-action w-100 mb-2" onclick="verifyAdminPin()">เข้าสู่ระบบ</button>
+    <button class="btn btn-link w-100 text-secondary" onclick="closeAdminLogin()">ยกเลิก</button>
+  </div>
+</div>
+
+<div id="adminApp">
+  <div class="admin-container">
+    <div class="admin-header">
+      <strong>แผงควบคุมแอดมิน</strong>
+      <button class="btn btn-sm btn-light" onclick="closeAdminApp()">ปิด</button>
+    </div>
+    <div class="admin-body">
+      <div class="mb-3">
+        <select id="adminClassSelect" class="form-select" onchange="onAdminClassChange()"></select>
+      </div>
+      <div class="admin-tabs">
+        <button class="admin-tab-item active" id="atOverview" onclick="adminChangeTab('overview')">ภาพรวม</button>
+        <button class="admin-tab-item" id="atSearch" onclick="adminChangeTab('search')">ค้นหานักเรียน</button>
+        <button class="admin-tab-item" id="atFeedback" onclick="adminChangeTab('feedback')">ข้อเสนอแนะ</button>
+        <button class="admin-tab-item" id="atSlides" onclick="adminChangeTab('slides')">สไลด์สอน</button>
+        <button class="admin-tab-item" id="atAssign" onclick="adminChangeTab('assign')">ชิ้นงาน</button>
+      </div>
+
+      <div id="adminOverviewView"></div>
+
+      <div id="adminSearchView" style="display:none;">
+        <div class="input-group mb-3">
+          <input type="text" id="adminSearchInput" class="form-control" placeholder="พิมพ์ชื่อนักเรียน...">
+          <button class="btn btn-action" onclick="adminDoSearch()">ค้นหา</button>
+        </div>
+        <div id="adminSearchResults"></div>
+      </div>
+
+      <div id="adminFeedbackView" style="display:none;"></div>
+
+      <div id="adminSlidesView" style="display:none;">
+        <div class="mb-2"><input type="text" id="slideGroup" class="form-control mb-2" placeholder="กลุ่มวิชา: ECON / Finan / MVSK"></div>
+        <div class="mb-2"><input type="text" id="slideTitle" class="form-control mb-2" placeholder="ชื่อสไลด์"></div>
+        <div class="mb-2"><input type="text" id="slideEmbedUrl" class="form-control mb-2" placeholder="ลิงก์ embed ของสไลด์ (URL)"></div>
+        <button class="btn btn-action w-100" onclick="adminAddSlideSubmit()">เพิ่มสไลด์</button>
+        <div id="adminSlideMsg" class="mt-2"></div>
+      </div>
+
+      <div id="adminAssignView" style="display:none;">
+        <div class="mb-2"><input type="text" id="newAssignmentTitle" class="form-control mb-2" placeholder="ชื่อชิ้นงานใหม่"></div>
+        <button class="btn btn-action w-100 mb-3" onclick="adminAddAssignmentSubmit()">เพิ่มชิ้นงาน</button>
+        <div class="mb-2"><input type="text" id="assignStudentId" class="form-control mb-2" placeholder="เลขประจำตัวนักเรียน"></div>
+        <div id="adminAssignmentList"></div>
+        <hr>
+        <div class="mb-2"><textarea id="teacherCommentInput" class="form-control mb-2" placeholder="คอมเมนต์ถึงนักเรียนคนนี้..."></textarea></div>
+        <button class="btn btn-action w-100" style="background: var(--gold-accent);" onclick="adminSaveComment()">บันทึกคอมเมนต์</button>
+        <div id="adminAssignMsg" class="mt-2"></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -365,6 +448,185 @@
     document.getElementById('loginSection').style.display = 'block';
     globalUserSubjectType = "";
     changeSubView('score');
+  }
+
+  // ==================== ADMIN ====================
+  let adminPin = '';
+  let adminClassList = [];
+  let adminSelectedSheet = '';
+
+  function openAdminLogin(evt) {
+    if (evt) evt.preventDefault();
+    document.getElementById('adminLoginModal').classList.add('show');
+    document.getElementById('adminPinInput').value = '';
+    document.getElementById('adminPinInput').focus();
+  }
+  function closeAdminLogin() {
+    document.getElementById('adminLoginModal').classList.remove('show');
+  }
+
+  async function adminApi(action, params) {
+    params = params || {};
+    params.pin = adminPin;
+    return callApi(action, params);
+  }
+
+  function verifyAdminPin() {
+    const pin = document.getElementById('adminPinInput').value;
+    adminPin = pin;
+    adminApi('adminOverview', { sheet: '__ping__' }).then(res => {
+      if (res.status === 'error' && res.message === 'รหัสผ่านแอดมินไม่ถูกต้อง') {
+        adminPin = '';
+        alert('รหัสผ่านไม่ถูกต้อง');
+        return;
+      }
+      closeAdminLogin();
+      openAdminApp();
+    }).catch(() => alert('เชื่อมต่อระบบไม่สำเร็จ'));
+  }
+
+  function openAdminApp() {
+    document.getElementById('adminApp').style.display = 'block';
+    if (adminClassList.length === 0) {
+      callApi('getClasses', {}).then(classes => {
+        adminClassList = classes;
+        const sel = document.getElementById('adminClassSelect');
+        sel.innerHTML = classes.map(c => `<option value="${c.sheetName}">${c.displayName}</option>`).join('');
+        if (classes.length > 0) { adminSelectedSheet = classes[0].sheetName; adminChangeTab('overview'); }
+      });
+    } else {
+      adminChangeTab('overview');
+    }
+  }
+  function closeAdminApp() {
+    document.getElementById('adminApp').style.display = 'none';
+  }
+  function onAdminClassChange() {
+    adminSelectedSheet = document.getElementById('adminClassSelect').value;
+    adminChangeTab(adminCurrentTab || 'overview');
+  }
+
+  let adminCurrentTab = 'overview';
+  function adminChangeTab(tab) {
+    adminCurrentTab = tab;
+    ['Overview','Search','Feedback','Slides','Assign'].forEach(t => {
+      document.getElementById('admin' + t + 'View').style.display = (t.toLowerCase() === tab) ? 'block' : 'none';
+    });
+    document.getElementById('atOverview').classList.toggle('active', tab === 'overview');
+    document.getElementById('atSearch').classList.toggle('active', tab === 'search');
+    document.getElementById('atFeedback').classList.toggle('active', tab === 'feedback');
+    document.getElementById('atSlides').classList.toggle('active', tab === 'slides');
+    document.getElementById('atAssign').classList.toggle('active', tab === 'assign');
+
+    if (tab === 'overview') loadAdminOverview();
+    if (tab === 'feedback') loadAdminFeedback();
+    if (tab === 'assign') loadAdminAssignmentsInfo();
+  }
+
+  function loadAdminOverview() {
+    const el = document.getElementById('adminOverviewView');
+    el.innerHTML = '<div class="text-center p-4 text-muted">กำลังโหลด...</div>';
+    adminApi('adminOverview', { sheet: adminSelectedSheet }).then(res => {
+      if (res.status !== 'success') { el.innerHTML = `<div class="text-danger">${res.message}</div>`; return; }
+      let html = `<div class="admin-stat-grid">
+        <div class="admin-stat-box"><div class="val">${res.totalStudents}</div><div class="lbl">นักเรียนทั้งหมด</div></div>
+        <div class="admin-stat-box"><div class="val">${res.avgScores.pre ?? '-'}</div><div class="lbl">คะแนนก่อนกลางภาคเฉลี่ย</div></div>
+        <div class="admin-stat-box"><div class="val">${res.avgScores.mid ?? '-'}</div><div class="lbl">คะแนนกลางภาคเฉลี่ย</div></div>
+        <div class="admin-stat-box"><div class="val">${res.avgScores.final ?? '-'}</div><div class="lbl">คะแนนปลายภาคเฉลี่ย</div></div>
+      </div>`;
+      if (res.assignments.length === 0) {
+        html += '<div class="text-muted text-center py-3">ยังไม่มีชิ้นงานในห้องนี้</div>';
+      } else {
+        res.assignments.forEach(a => {
+          const pct = res.totalStudents > 0 ? Math.round(a.submitted / res.totalStudents * 100) : 0;
+          html += `<div class="admin-card"><strong>${a.title}</strong><div class="small text-muted">ส่งแล้ว ${a.submitted}/${res.totalStudents} คน (${pct}%)</div></div>`;
+        });
+      }
+      el.innerHTML = html;
+    });
+  }
+
+  function adminDoSearch() {
+    const q = document.getElementById('adminSearchInput').value;
+    const el = document.getElementById('adminSearchResults');
+    el.innerHTML = '<div class="text-center p-3 text-muted">กำลังค้นหา...</div>';
+    adminApi('adminSearch', { query: q }).then(res => {
+      if (res.status !== 'success') { el.innerHTML = `<div class="text-danger">${res.message}</div>`; return; }
+      if (res.results.length === 0) { el.innerHTML = '<div class="text-muted text-center py-3">ไม่พบนักเรียน</div>'; return; }
+      el.innerHTML = res.results.map(r => `<div class="admin-card"><strong>${r.name}</strong><div class="small text-muted">รหัส ${r.id} · ${r.displayName}</div></div>`).join('');
+    });
+  }
+
+  function loadAdminFeedback() {
+    const el = document.getElementById('adminFeedbackView');
+    el.innerHTML = '<div class="text-center p-4 text-muted">กำลังโหลด...</div>';
+    adminApi('adminFeedback', { sheet: adminSelectedSheet }).then(res => {
+      if (res.status !== 'success') { el.innerHTML = `<div class="text-danger">${res.message}</div>`; return; }
+      if (res.results.length === 0) { el.innerHTML = '<div class="text-muted text-center py-3">ยังไม่มีข้อเสนอแนะในห้องนี้</div>'; return; }
+      el.innerHTML = res.results.map(r => `<div class="admin-card"><strong>${r.name}</strong> <span class="small text-muted">(${r.id})</span><div class="mt-1">${r.feedback}</div></div>`).join('');
+    });
+  }
+
+  function adminAddSlideSubmit() {
+    const group = document.getElementById('slideGroup').value.trim();
+    const title = document.getElementById('slideTitle').value.trim();
+    const embedUrl = document.getElementById('slideEmbedUrl').value.trim();
+    const msg = document.getElementById('adminSlideMsg');
+    if (!group || !title || !embedUrl) { msg.innerHTML = '<span class="text-danger">กรุณากรอกให้ครบทุกช่อง</span>'; return; }
+    adminApi('adminAddSlide', { group, title, embedUrl }).then(res => {
+      msg.innerHTML = `<span class="${res.status === 'success' ? 'text-success' : 'text-danger'}">${res.message}</span>`;
+      if (res.status === 'success') { document.getElementById('slideTitle').value = ''; document.getElementById('slideEmbedUrl').value = ''; }
+    });
+  }
+
+  function adminAddAssignmentSubmit() {
+    const title = document.getElementById('newAssignmentTitle').value.trim();
+    const msg = document.getElementById('adminAssignMsg');
+    if (!title) { msg.innerHTML = '<span class="text-danger">กรุณาระบุชื่อชิ้นงาน</span>'; return; }
+    adminApi('adminAddAssignment', { sheet: adminSelectedSheet, title }).then(res => {
+      msg.innerHTML = `<span class="${res.status === 'success' ? 'text-success' : 'text-danger'}">${res.message}</span>`;
+      if (res.status === 'success') { document.getElementById('newAssignmentTitle').value = ''; loadAdminAssignmentsInfo(); }
+    });
+  }
+
+  function loadAdminAssignmentsInfo() {
+    adminApi('adminOverview', { sheet: adminSelectedSheet }).then(res => {
+      if (res.status !== 'success') return;
+      window.__adminAssignments = res.assignments;
+      renderAdminAssignmentList();
+    });
+  }
+
+  function renderAdminAssignmentList() {
+    const list = window.__adminAssignments || [];
+    const el = document.getElementById('adminAssignmentList');
+    const studentId = document.getElementById('assignStudentId').value.trim();
+    if (list.length === 0) { el.innerHTML = '<div class="text-muted small">ยังไม่มีชิ้นงานในห้องนี้</div>'; return; }
+    el.innerHTML = list.map(a => `
+      <div class="admin-card d-flex justify-content-between align-items-center">
+        <span class="small">${a.title}</span>
+        <button class="btn btn-sm btn-outline-success" onclick="adminToggleStatus(${a.colIndex}, true)" ${!studentId ? 'disabled' : ''}>ส่งแล้ว</button>
+        <button class="btn btn-sm btn-outline-danger" onclick="adminToggleStatus(${a.colIndex}, false)" ${!studentId ? 'disabled' : ''}>ยังไม่ส่ง</button>
+      </div>`).join('');
+  }
+
+  function adminToggleStatus(colIndex, done) {
+    const studentId = document.getElementById('assignStudentId').value.trim();
+    if (!studentId) return alert('กรุณากรอกเลขประจำตัวนักเรียนก่อน');
+    adminApi('adminSetStatus', { sheet: adminSelectedSheet, id: studentId, colIndex, done }).then(res => {
+      alert(res.message);
+    });
+  }
+
+  function adminSaveComment() {
+    const studentId = document.getElementById('assignStudentId').value.trim();
+    const comment = document.getElementById('teacherCommentInput').value.trim();
+    const msg = document.getElementById('adminAssignMsg');
+    if (!studentId || !comment) { msg.innerHTML = '<span class="text-danger">กรุณากรอกเลขประจำตัวและคอมเมนต์</span>'; return; }
+    adminApi('adminSetComment', { sheet: adminSelectedSheet, id: studentId, comment }).then(res => {
+      msg.innerHTML = `<span class="${res.status === 'success' ? 'text-success' : 'text-danger'}">${res.message}</span>`;
+      if (res.status === 'success') document.getElementById('teacherCommentInput').value = '';
+    });
   }
 </script>
 </body>
