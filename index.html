@@ -685,11 +685,14 @@
         <button class="btn-primary" style="margin-bottom:18px;" onclick="adminAddAssignmentSubmit()">เพิ่มชิ้นงาน</button>
         <div class="foil-line"></div>
         <div class="field-block">
-          <input type="text" id="assignStudentId" class="input-refined" placeholder="กรอกเลขประจำตัวนักเรียนแล้วกด Enter" onkeydown="if(event.key==='Enter'){event.preventDefault();adminLoadStudentAssignments();}">
+          <input type="text" id="assignStudentId" class="input-refined" placeholder="กรอกเลขประจำตัวนักเรียนแล้วกด Enter หรือเลือกจากรายชื่อด้านล่าง" onkeydown="if(event.key==='Enter'){event.preventDefault();adminLoadStudentAssignments();}">
         </div>
         <button class="btn-outline-refined" style="width:100%; padding:12px;" onclick="adminLoadStudentAssignments()">โหลดรายการชิ้นงานของนักเรียนคนนี้</button>
         <div id="adminAssignmentList" style="margin-top:16px;"></div>
         <div id="adminAssignMsg" class="msg-line"></div>
+        <div class="foil-line"></div>
+        <div class="panel-eyebrow" style="margin-top:6px;">รายชื่อนักเรียนทั้งห้อง</div>
+        <div id="adminStudentRoster" style="margin-top:10px; max-height:340px; overflow-y:auto;"></div>
       </div>
     </div>
   </div>
@@ -1054,6 +1057,27 @@
   function loadAdminAssignmentsInfo() {
     document.getElementById('adminAssignmentList').innerHTML = '';
     document.getElementById('assignStudentId').value = '';
+    loadAdminStudentRoster();
+  }
+
+  function loadAdminStudentRoster() {
+    const el = document.getElementById('adminStudentRoster');
+    el.innerHTML = '<div class="text-center p-3 text-muted small">กำลังโหลดรายชื่อ...</div>';
+    adminApi('adminGetStudentList', { sheet: adminSelectedSheet }).then(res => {
+      if (res.status !== 'success') { el.innerHTML = `<div class="text-danger small">${res.message}</div>`; return; }
+      if (res.students.length === 0) { el.innerHTML = '<div class="text-muted small">ไม่พบนักเรียนในห้องนี้</div>'; return; }
+      el.innerHTML = res.students.map(s => `
+        <div class="admin-card" style="cursor:pointer; padding:10px 14px; margin-bottom:6px;" onclick="adminPickStudent('${s.id}')">
+          <span class="small fw-semibold">${s.name}</span>
+          <span class="small text-muted"> — รหัส ${s.id}</span>
+        </div>`).join('');
+    }).catch(() => { el.innerHTML = '<div class="text-danger small">เชื่อมต่อระบบไม่สำเร็จ</div>'; });
+  }
+
+  function adminPickStudent(studentId) {
+    document.getElementById('assignStudentId').value = studentId;
+    adminLoadStudentAssignments();
+    document.getElementById('adminAssignmentList').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   function adminLoadStudentAssignments() {
