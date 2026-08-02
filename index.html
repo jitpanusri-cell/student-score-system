@@ -4,107 +4,561 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ระบบตรวจสอบคะแนนและสถานะงานนักเรียน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@400;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
   :root {
-    --navy-primary: #002366;
-    --navy-light: #003399;
-    --gold-accent: #C5A059;
-    --slate-gray: #F4F6F9;
+    --ink-navy: #0B2545;
+    --navy-deep: #061530;
+    --navy-mid: #163A6B;
+    --gold: #B8963E;
+    --gold-light: #E4CB8E;
+    --parchment: #FBF8F2;
+    --paper: #FFFFFF;
+    --paper-line: #E7DFCC;
+    --ink-text: #1C2733;
+    --ink-soft: #5B6472;
+    --success: #2F6F4F;
+    --success-bg: #E7F1EA;
+    --danger: #9C3B3B;
+    --danger-bg: #F7E9E7;
+    --radius-lg: 20px;
+    --radius-md: 14px;
+    --radius-sm: 10px;
   }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
   body {
+    margin: 0;
     font-family: 'Sarabun', sans-serif;
-    background-color: var(--slate-gray);
-    color: #2D3748;
+    background: var(--parchment);
+    color: var(--ink-text);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4, h5, h6 { font-family: 'Noto Serif Thai', serif; margin: 0; }
+  ::selection { background: var(--gold-light); color: var(--navy-deep); }
+  a { color: inherit; }
+  button { font-family: inherit; cursor: pointer; }
+  input, textarea, select { font-family: inherit; }
+
+  /* ============ Foil divider signature element ============ */
+  .foil-line {
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold) 20%, var(--gold-light) 50%, var(--gold) 80%, transparent);
+    border: none;
+    margin: 20px 0;
+    opacity: 0.85;
+  }
+
+  /* ============ Overall two-panel portal ============ */
+  .portal {
+    display: grid;
+    grid-template-columns: 400px 1fr;
     min-height: 100vh;
+  }
+  @media (max-width: 900px) {
+    .portal { grid-template-columns: 1fr; }
+  }
+
+  /* ============ Letterhead (left / top) panel ============ */
+  .letterhead {
+    background:
+      radial-gradient(circle at 15% 10%, rgba(184,150,62,0.14), transparent 45%),
+      linear-gradient(160deg, var(--navy-deep) 0%, var(--ink-navy) 55%, var(--navy-mid) 100%);
+    color: #EDEFF3;
+    padding: 48px 36px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
     display: flex;
     flex-direction: column;
+    align-items: center;
+    text-align: center;
+    overflow-y: auto;
   }
-  .main-wrapper { flex: 1; display: flex; align-items: center; justify-content: center; padding: 20px; }
-  .app-container {
-    background: #ffffff; border-radius: 24px; box-shadow: 0 15px 35px rgba(0,35,102,0.06);
-    width: 100%; max-width: 500px; overflow: hidden; border: 1px solid rgba(0,35,102,0.08);
+  @media (max-width: 900px) {
+    .letterhead { position: static; height: auto; padding: 36px 24px 30px; }
   }
-  .brand-banner {
-    background: linear-gradient(135deg, var(--navy-primary), var(--navy-light));
-    color: #fff; padding: 35px 24px; text-align: center;
+
+  .seal-ring {
+    width: 128px; height: 128px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.10), transparent 60%);
+    border: 2px solid var(--gold);
+    box-shadow:
+      0 0 0 4px rgba(184,150,62,0.18),
+      inset 0 2px 6px rgba(0,0,0,0.35),
+      0 12px 28px rgba(0,0,0,0.35);
+    margin-bottom: 22px;
+    animation: sealRise 0.7s cubic-bezier(.2,.8,.2,1) both;
   }
-  .school-crest { width: 85px; height: auto; margin-bottom: 15px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2)); }
-  .brand-banner h4 { font-weight: 700; font-size: 1.3rem; margin-bottom: 8px; line-height: 1.4; }
-  .brand-banner p { font-size: 0.9rem; opacity: 0.9; margin-bottom: 0; line-height: 1.5; }
-  .digit-group { display: flex; justify-content: space-between; gap: 10px; max-width: 320px; margin: 20px auto; }
+  .seal-ring img { width: 78px; height: auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); }
+
+  @keyframes sealRise {
+    from { opacity: 0; transform: translateY(10px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .letterhead h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.4;
+    letter-spacing: 0.2px;
+  }
+  .letterhead .eyebrow {
+    font-family: 'Sarabun', sans-serif;
+    font-size: 0.72rem;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--gold-light);
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  .letterhead .who {
+    margin-top: 18px;
+    font-size: 0.92rem;
+    line-height: 1.75;
+    color: #C9D2E0;
+  }
+  .letterhead .who strong { color: #fff; font-weight: 600; }
+
+  .letterhead-foot {
+    margin-top: auto;
+    padding-top: 24px;
+    font-size: 0.76rem;
+    color: #93A0B5;
+    line-height: 1.7;
+  }
+  .letterhead-foot .maxim {
+    font-style: italic;
+    color: #B9C2D4;
+  }
+  .letterhead-foot .maxim-cite {
+    display: block;
+    margin-top: 4px;
+    color: var(--gold-light);
+    font-weight: 600;
+    font-size: 0.7rem;
+    letter-spacing: 0.4px;
+    font-style: normal;
+  }
+
+  .admin-entry-link {
+    margin-top: 20px;
+    font-size: 0.78rem;
+    color: #8FA0BE;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 100px;
+    transition: all 0.2s ease;
+  }
+  .admin-entry-link:hover { color: #fff; border-color: var(--gold); background: rgba(184,150,62,0.12); }
+
+  /* ============ Stage (right / bottom content) ============ */
+  .stage {
+    padding: 48px 32px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+  @media (max-width: 900px) { .stage { padding: 28px 18px 60px; } }
+
+  .stage-inner { width: 100%; max-width: 620px; }
+
+  .panel-card {
+    background: var(--paper);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--paper-line);
+    box-shadow: 0 18px 50px -20px rgba(11,37,69,0.18);
+    padding: 40px;
+    animation: cardRise 0.6s cubic-bezier(.2,.8,.2,1) both;
+    animation-delay: 0.08s;
+  }
+  @media (max-width: 560px) { .panel-card { padding: 26px 20px; } }
+
+  @keyframes cardRise {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .panel-eyebrow {
+    font-size: 0.72rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .panel-title { font-size: 1.5rem; color: var(--ink-navy); margin-bottom: 6px; }
+  .panel-sub { color: var(--ink-soft); font-size: 0.92rem; margin-bottom: 26px; }
+
+  /* ============ Form elements ============ */
+  .field-label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--ink-navy);
+    margin-bottom: 8px;
+  }
+  select.select-refined {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--paper-line);
+    background: var(--parchment);
+    font-size: 1rem;
+    color: var(--ink-text);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%230B2545' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+  }
+  select.select-refined:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(184,150,62,0.16);
+  }
+
+  .digit-group { display: flex; justify-content: space-between; gap: 10px; max-width: 340px; margin: 12px auto 0; }
   .digit-box {
-    width: 50px; height: 55px; background-color: #F8FAFC; border: 2px solid #E2E8F0; border-radius: 12px;
-    text-align: center; font-size: 1.4rem; font-weight: 700; color: var(--navy-primary); transition: all 0.2s ease;
+    width: 56px; height: 60px;
+    background: var(--parchment);
+    border: 1.5px solid var(--paper-line);
+    border-radius: var(--radius-sm);
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    font-family: 'Sarabun', sans-serif;
+    color: var(--ink-navy);
+    transition: all 0.2s ease;
   }
-  .digit-box:focus { border-color: var(--navy-light); background-color: #fff; box-shadow: 0 0 0 3px rgba(0,51,153,0.1); outline: none; }
-  .btn-action { background: var(--navy-primary); color: #fff; font-weight: 600; padding: 14px; border-radius: 14px; border: none; transition: all 0.2s ease; }
-  .btn-action:hover { background: var(--navy-light); color: #fff; transform: translateY(-1px); }
-  .app-navigation { display: flex; background: #F1F5F9; padding: 6px; border-radius: 16px; margin-bottom: 25px; }
-  .nav-pill-item { flex: 1; text-align: center; padding: 12px 4px; font-weight: 600; font-size: 0.82rem; color: #64748B; text-decoration: none; border-radius: 12px; border: none; background: none; transition: 0.2s; }
-  .nav-pill-item.active { background: #fff; color: var(--navy-primary); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-  .metric-row { display: flex; justify-content: space-between; align-items: center; background: #F8FAFC; padding: 16px; border-radius: 16px; margin-bottom: 12px; border-left: 5px solid var(--navy-light); }
-  .metric-title { font-size: 0.9rem; font-weight: 600; color: #4A5568; }
-  .metric-val { font-size: 1.15rem; font-weight: 700; color: var(--navy-primary); }
-  .grade-box-highlight { background: linear-gradient(135deg, #FFFDF5, #FFF9E6); border: 2px dashed var(--gold-accent); border-radius: 20px; padding: 24px; text-align: center; margin-top: 20px; }
-  .task-card { background: #fff; border: 1px solid #E2E8F0; border-radius: 14px; padding: 14px 18px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-  .badge-status { padding: 6px 14px; border-radius: 20px; font-size: 0.82rem; font-weight: 600; }
-  .status-done { background: #E6F4EA; color: #137333; }
-  .status-missing { background: #FCE8E6; color: #C5221F; }
-  .slide-premium-card { background: #fff; border-radius: 18px; border: 1px solid #E2E8F0; margin-bottom: 20px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
-  .slide-embed-container { position: relative; width: 100%; height: 230px; background: #e2e8f0; }
+  .digit-box:focus {
+    outline: none;
+    border-color: var(--gold);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(184,150,62,0.16);
+    transform: translateY(-1px);
+  }
+
+  .btn-primary {
+    width: 100%;
+    background: linear-gradient(135deg, var(--ink-navy), var(--navy-mid));
+    color: #fff;
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 15px;
+    border-radius: var(--radius-sm);
+    border: none;
+    transition: all 0.2s ease;
+    box-shadow: 0 10px 24px -10px rgba(11,37,69,0.55);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 14px 28px -10px rgba(11,37,69,0.6); }
+  .btn-primary:disabled { opacity: 0.7; transform: none; }
+
+  .btn-gold {
+    background: linear-gradient(135deg, var(--gold), #A17F32);
+    color: #fff;
+    box-shadow: 0 10px 24px -10px rgba(184,150,62,0.6);
+  }
+
+  .btn-ghost {
+    width: 100%;
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    font-size: 0.85rem;
+    padding: 12px;
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+  .btn-ghost:hover { color: var(--danger); }
+
+  .alert-refined {
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    background: var(--danger-bg);
+    color: var(--danger);
+    font-size: 0.85rem;
+    text-align: center;
+    display: none;
+  }
+
+  /* ============ Dashboard header ============ */
+  .dash-header {
+    display: flex; align-items: center; gap: 16px;
+    padding-bottom: 22px; margin-bottom: 24px;
+    border-bottom: 1px solid var(--paper-line);
+  }
+  .dash-avatar {
+    width: 54px; height: 54px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--ink-navy), var(--navy-mid));
+    display: flex; align-items: center; justify-content: center;
+    color: var(--gold-light); font-size: 1.3rem; flex-shrink: 0;
+    border: 2px solid var(--gold);
+  }
+  .dash-header .badge-subject {
+    display: inline-block;
+    font-size: 0.7rem; font-weight: 700; letter-spacing: 0.5px;
+    color: var(--gold); text-transform: uppercase;
+    margin-bottom: 3px;
+  }
+  .dash-header h5 { font-size: 1.15rem; color: var(--ink-navy); }
+  .dash-header small { color: var(--ink-soft); font-size: 0.82rem; }
+
+  /* ============ Tabs (nav pills) ============ */
+  .tab-row {
+    display: flex; gap: 4px;
+    background: var(--parchment);
+    padding: 5px; border-radius: 100px;
+    margin-bottom: 26px;
+    overflow-x: auto;
+  }
+  .tab-row::-webkit-scrollbar { display: none; }
+  .tab-pill {
+    flex: 1 0 auto;
+    white-space: nowrap;
+    text-align: center;
+    padding: 10px 14px;
+    font-weight: 600; font-size: 0.82rem;
+    color: var(--ink-soft);
+    border: none; background: none; border-radius: 100px;
+    transition: all 0.2s ease;
+  }
+  .tab-pill.active { background: var(--ink-navy); color: #fff; box-shadow: 0 6px 16px -8px rgba(11,37,69,0.5); }
+
+  /* ============ Ledger-style score rows ============ */
+  .ledger-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 13px 2px;
+    border-bottom: 1px dashed var(--paper-line);
+  }
+  .ledger-row:last-child { border-bottom: none; }
+  .ledger-row .l-label { font-size: 0.92rem; color: var(--ink-soft); }
+  .ledger-row .l-value {
+    font-weight: 700; color: var(--ink-navy);
+    font-variant-numeric: tabular-nums; font-size: 1.05rem;
+  }
+
+  .grade-seal {
+    margin-top: 24px;
+    padding: 26px;
+    text-align: center;
+    border-radius: var(--radius-lg);
+    background: linear-gradient(160deg, #FFFDF6, var(--parchment));
+    border: 1.5px dashed var(--gold);
+  }
+  .grade-seal .g-label { font-size: 0.8rem; color: var(--ink-soft); font-weight: 600; margin-bottom: 6px; }
+  .grade-seal .g-value {
+    font-family: 'Noto Serif Thai', serif;
+    font-size: 2.6rem; font-weight: 700; color: var(--ink-navy);
+    line-height: 1.1;
+  }
+
+  /* ============ Task / assignment cards ============ */
+  .task-card {
+    background: var(--paper);
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius-md);
+    padding: 16px 18px;
+    margin-bottom: 10px;
+  }
+  .task-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .task-top .t-title { font-weight: 600; font-size: 0.92rem; color: var(--ink-text); }
+  .badge-status {
+    padding: 5px 13px; border-radius: 100px;
+    font-size: 0.76rem; font-weight: 700; flex-shrink: 0;
+  }
+  .status-done { background: var(--success-bg); color: var(--success); }
+  .status-missing { background: var(--danger-bg); color: var(--danger); }
+  .task-comment {
+    margin-top: 8px; padding-left: 4px;
+    font-size: 0.82rem; color: var(--ink-soft);
+    border-left: 2px solid var(--gold);
+    padding-left: 10px;
+  }
+
+  /* ============ Slides ============ */
+  .subject-divider {
+    font-family: 'Noto Serif Thai', serif;
+    font-size: 0.95rem; font-weight: 700; color: var(--ink-navy);
+    margin: 22px 0 14px; padding-bottom: 8px;
+    border-bottom: 2px solid var(--paper-line);
+  }
+  .slide-premium-card {
+    background: var(--paper); border-radius: var(--radius-md);
+    border: 1px solid var(--paper-line); margin-bottom: 18px; overflow: hidden;
+    box-shadow: 0 10px 26px -18px rgba(11,37,69,0.3);
+  }
+  .slide-embed-container { position: relative; width: 100%; height: 230px; background: #E7DFCC; }
   .slide-embed-container iframe { width: 100%; height: 100%; border: none; }
-  .slide-card-details { padding: 15px 18px; display: flex; align-items: center; justify-content: space-between; background: #fff; }
-  .slide-badge-title { font-size: 0.88rem; font-weight: 600; color: #1A202C; margin-bottom: 0; }
-  .btn-slide-expand { background: var(--navy-primary); color: #fff; padding: 6px 12px; font-size: 0.78rem; font-weight: 600; border-radius: 8px; text-decoration: none; }
-  .btn-slide-expand:hover { background: var(--navy-light); color: #fff; }
-  .subject-divider { font-size: 0.85rem; font-weight: 700; color: var(--navy-light); margin: 15px 0 12px; border-bottom: 2px solid #E2E8F0; padding-bottom: 6px; }
-  .quote-footer { font-style: italic; font-size: 0.8rem; color: #718096; text-align: center; padding: 20px; line-height: 1.5; background: #F8FAFC; border-top: 1px solid #E2E8F0; }
-  #dashboardSection { display: none; }
-  .admin-footer-link { font-size: 0.75rem; color: #94A3B8; text-decoration: none; display: block; text-align: center; padding: 10px; }
-  .admin-footer-link:hover { color: var(--navy-light); }
-  .admin-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+  .slide-card-details { padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .slide-badge-title { font-size: 0.88rem; font-weight: 600; color: var(--ink-text); margin: 0; }
+  .btn-slide-expand {
+    background: var(--ink-navy); color: #fff; padding: 7px 14px;
+    font-size: 0.76rem; font-weight: 600; border-radius: 100px;
+    text-decoration: none; white-space: nowrap;
+  }
+
+  /* ============ Evaluation form ============ */
+  .eval-card { background: var(--parchment); border-radius: var(--radius-md); padding: 22px; }
+  .eval-card textarea {
+    width: 100%; border: none; background: #fff;
+    border-radius: var(--radius-sm); padding: 14px;
+    font-size: 0.92rem; resize: vertical;
+    box-shadow: inset 0 0 0 1.5px var(--paper-line);
+  }
+  .eval-card textarea:focus { outline: none; box-shadow: inset 0 0 0 1.5px var(--gold); }
+
+  /* ============ Admin login modal ============ */
+  .admin-modal-backdrop {
+    position: fixed; inset: 0; background: rgba(6,21,48,0.55);
+    backdrop-filter: blur(3px);
+    display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px;
+  }
   .admin-modal-backdrop.show { display: flex; }
-  .admin-modal { background: #fff; border-radius: 20px; padding: 28px; width: 100%; max-width: 340px; text-align: center; }
-  #adminApp { display: none; min-height: 100vh; background: var(--slate-gray); padding: 16px; }
-  .admin-container { max-width: 700px; margin: 0 auto; background: #fff; border-radius: 20px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,35,102,0.06); }
-  .admin-header { background: linear-gradient(135deg, var(--navy-primary), var(--navy-light)); color: #fff; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
-  .admin-body { padding: 20px; }
-  .admin-tabs { display: flex; flex-wrap: wrap; gap: 6px; background: #F1F5F9; padding: 6px; border-radius: 14px; margin-bottom: 20px; }
-  .admin-tab-item { flex: 1; min-width: 90px; text-align: center; padding: 10px 4px; font-weight: 600; font-size: 0.78rem; color: #64748B; border: none; background: none; border-radius: 10px; }
-  .admin-tab-item.active { background: #fff; color: var(--navy-primary); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-  .admin-card { background: #F8FAFC; border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; border-left: 4px solid var(--navy-light); }
-  .admin-stat-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin-bottom: 16px; }
-  .admin-stat-box { background: #F8FAFC; border-radius: 12px; padding: 12px; text-align: center; }
-  .admin-stat-box .val { font-size: 1.3rem; font-weight: 700; color: var(--navy-primary); }
-  .admin-stat-box .lbl { font-size: 0.72rem; color: #64748B; }
+  .admin-modal {
+    background: var(--paper); border-radius: var(--radius-lg);
+    padding: 32px; width: 100%; max-width: 340px; text-align: center;
+    box-shadow: 0 30px 70px -20px rgba(0,0,0,0.5);
+  }
+  .admin-modal input {
+    width: 100%; padding: 13px; border-radius: var(--radius-sm);
+    border: 1.5px solid var(--paper-line); text-align: center; margin-bottom: 16px; font-size: 1rem;
+  }
+  .admin-modal input:focus { outline: none; border-color: var(--gold); }
+
+  /* ============ Admin app shell ============ */
+  #adminApp { display: none; min-height: 100vh; background: var(--parchment); }
+  .admin-shell { max-width: 900px; margin: 0 auto; padding: 28px 20px 60px; }
+  .admin-topbar {
+    display: flex; justify-content: space-between; align-items: center;
+    background: linear-gradient(135deg, var(--navy-deep), var(--ink-navy));
+    color: #fff; padding: 22px 26px; border-radius: var(--radius-lg);
+    margin-bottom: 22px;
+    box-shadow: 0 16px 36px -18px rgba(11,37,69,0.5);
+  }
+  .admin-topbar strong { font-family: 'Noto Serif Thai', serif; font-size: 1.15rem; }
+  .btn-close-admin {
+    background: rgba(255,255,255,0.12); color: #fff; border: none;
+    padding: 8px 16px; border-radius: 100px; font-size: 0.82rem; font-weight: 600;
+  }
+  .admin-card {
+    background: var(--paper); border-radius: var(--radius-md);
+    padding: 16px 18px; margin-bottom: 10px;
+    border: 1px solid var(--paper-line); border-left: 4px solid var(--gold);
+  }
+  .admin-stat-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; margin-bottom: 20px; }
+  @media (min-width: 640px) { .admin-stat-grid { grid-template-columns: repeat(4,1fr); } }
+  .admin-stat-box {
+    background: var(--paper); border: 1px solid var(--paper-line);
+    border-radius: var(--radius-md); padding: 16px; text-align: center;
+  }
+  .admin-stat-box .val { font-family: 'Noto Serif Thai', serif; font-size: 1.5rem; font-weight: 700; color: var(--ink-navy); }
+  .admin-stat-box .lbl { font-size: 0.72rem; color: var(--ink-soft); margin-top: 2px; }
+
+  .field-block { margin-bottom: 14px; }
+  .input-refined {
+    width: 100%; padding: 12px 14px; border-radius: var(--radius-sm);
+    border: 1.5px solid var(--paper-line); font-size: 0.92rem; background: var(--paper);
+  }
+  .input-refined:focus { outline: none; border-color: var(--gold); }
+  .input-group-refined { display: flex; gap: 8px; }
+  .input-group-refined .input-refined { flex: 1; }
+  .btn-inline {
+    padding: 12px 18px; border-radius: var(--radius-sm); border: none;
+    background: var(--ink-navy); color: #fff; font-weight: 600; font-size: 0.85rem; white-space: nowrap;
+  }
+  .btn-outline-refined {
+    padding: 6px 14px; border-radius: 100px; font-size: 0.78rem; font-weight: 600;
+    border: 1.5px solid var(--paper-line); background: #fff; color: var(--ink-soft);
+  }
+  .btn-outline-refined.state-success { border-color: var(--success); color: var(--success); background: var(--success-bg); }
+  .btn-outline-refined.state-danger { border-color: var(--danger); color: var(--danger); background: var(--danger-bg); }
+  .msg-line { font-size: 0.85rem; margin-top: 10px; }
+  .msg-line.ok { color: var(--success); }
+  .msg-line.err { color: var(--danger); }
+
+  #dashboardSection { display: none; }
+
+  /* ============ JS-generated content: exact class names the script emits ============ */
+  .metric-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 13px 2px;
+    border-bottom: 1px dashed var(--paper-line);
+  }
+  .metric-title { font-size: 0.92rem; color: var(--ink-soft); }
+  .metric-val { font-weight: 700; color: var(--ink-navy); font-variant-numeric: tabular-nums; font-size: 1.05rem; }
+
+  .btn-outline-primary {
+    --bs-btn-color: var(--ink-navy);
+    --bs-btn-border-color: var(--ink-navy);
+    --bs-btn-hover-bg: var(--ink-navy);
+    --bs-btn-hover-border-color: var(--ink-navy);
+  }
+  .btn-outline-success { --bs-btn-color: var(--success); --bs-btn-border-color: var(--success); --bs-btn-hover-bg: var(--success); --bs-btn-hover-border-color: var(--success); }
+  .btn-outline-danger { --bs-btn-color: var(--danger); --bs-btn-border-color: var(--danger); --bs-btn-hover-bg: var(--danger); --bs-btn-hover-border-color: var(--danger); }
+  .btn-success { --bs-btn-bg: var(--success); --bs-btn-border-color: var(--success); }
+  .btn-danger { --bs-btn-bg: var(--danger); --bs-btn-border-color: var(--danger); }
+  .spinner-border { color: var(--gold); }
+  .form-control, .form-select { border-color: var(--paper-line); }
+  .form-control:focus, .form-select:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(184,150,62,0.16); }
+  .text-muted { color: var(--ink-soft) !important; }
+  .text-danger { color: var(--danger) !important; }
+  .text-success { color: var(--success) !important; }
 </style>
 </head>
 <body>
 
-<div class="main-wrapper">
-  <div class="app-container">
+<div class="portal">
 
-    <div class="brand-banner">
+  <!-- ============ Letterhead ============ -->
+  <div class="letterhead">
+    <div class="seal-ring">
       <img src="https://lh3.googleusercontent.com/d/1PVf5EA7ntHrhJBLbwOuobqWfd9mvscY8"
            onerror="this.onerror=null; this.src='https://drive.google.com/uc?export=view&id=1PVf5EA7ntHrhJBLbwOuobqWfd9mvscY8';"
-           class="school-crest" alt="โรงเรียนมหาวชิราวุธ">
-      <h4>ระบบตรวจสอบคะแนนและสถานะงาน</h4>
-      <p>ครูจิตรภาณุ ศรีหวัง (ครูเก่ง)<br>กลุ่มสาระการเรียนรู้สังคมศึกษา ศาสนา และวัฒนธรรม<br>โรงเรียนมหาวชิราวุธ จังหวัดสงขลา</p>
+           alt="โรงเรียนมหาวชิราวุธ">
     </div>
+    <div class="eyebrow">โรงเรียนมหาวชิราวุธ จังหวัดสงขลา</div>
+    <h1>ระบบตรวจสอบคะแนน<br>และสถานะงาน</h1>
+    <div class="who">
+      <strong>ครูจิตรภาณุ ศรีหวัง</strong> (ครูเก่ง)<br>
+      กลุ่มสาระการเรียนรู้สังคมศึกษา ศาสนา และวัฒนธรรม
+    </div>
+    <a href="#" class="admin-entry-link" onclick="openAdminLogin(event)">
+      <i class="fa-solid fa-user-shield"></i> สำหรับครู/แอดมิน
+    </a>
+    <div class="letterhead-foot">
+      <span class="maxim">"People Face Tradeoffs" คนเราจะเผชิญกับการได้อย่างเสียอย่างเสมอ</span>
+      <span class="maxim-cite">10 Principles of Economics, Gregory Mankiw</span>
+    </div>
+  </div>
 
-    <div id="loginSection" class="p-4">
-      <div class="mb-4">
-        <label class="form-label small fw-bold text-secondary">ระดับชั้น / รายวิชาเรียน</label>
-        <select id="classDropdown" class="form-select form-control-lg border-2 shadow-none" style="border-radius:12px;">
+  <!-- ============ Stage ============ -->
+  <div class="stage">
+    <div class="stage-inner">
+
+      <div id="loginSection" class="panel-card">
+        <div class="panel-eyebrow">เข้าสู่ระบบ</div>
+        <div class="panel-title">ตรวจสอบผลการเรียน</div>
+        <div class="panel-sub">กรอกข้อมูลของคุณเพื่อดูคะแนนและสถานะงานล่าสุด</div>
+
+        <label class="field-label">ระดับชั้น / รายวิชาเรียน</label>
+        <select id="classDropdown" class="select-refined">
           <option value="">กำลังโหลดข้อมูลห้องเรียน...</option>
         </select>
-      </div>
 
-      <div class="mb-4 text-center">
-        <label class="form-label small fw-bold text-secondary d-block text-start">เลขประจำตัวนักเรียน (5 หลัก)</label>
+        <div class="foil-line"></div>
+
+        <label class="field-label" style="text-align:center; display:block;">เลขประจำตัวนักเรียน (5 หลัก)</label>
         <div class="digit-group" id="studentIdGroup">
           <input type="text" class="digit-box" maxlength="1" inputmode="numeric" pattern="\d*">
           <input type="text" class="digit-box" maxlength="1" inputmode="numeric" pattern="\d*">
@@ -112,108 +566,106 @@
           <input type="text" class="digit-box" maxlength="1" inputmode="numeric" pattern="\d*">
           <input type="text" class="digit-box" maxlength="1" inputmode="numeric" pattern="\d*">
         </div>
-      </div>
 
-      <button class="btn btn-action w-100 btn-lg shadow-sm" onclick="processLogin()" id="loginActionBtn">
-        <i class="fa-solid fa-right-to-bracket me-2"></i>เข้าสู่ระบบ
-      </button>
-      <div id="loginErrorMessage" class="alert alert-danger mt-3 text-center small p-2 rounded-3" style="display:none"></div>
-    </div>
-
-    <div id="dashboardSection">
-      <div class="p-3 bg-light text-center border-bottom">
-        <span class="badge px-3 py-2 mb-2 rounded-pill fs-7" style="background: var(--navy-primary);" id="labelSubjectDisplay">-</span>
-        <h5 class="mb-1 fw-bold text-dark" id="labelNameDisplay">-</h5>
-        <small class="text-muted">เลขประจำตัว: <span id="labelIdDisplay">-</span> | ชั้นเรียน: <span id="labelClassDisplay">-</span></small>
-      </div>
-
-      <div class="p-4">
-        <div class="app-navigation">
-          <button class="nav-pill-item active" id="tabScoreBtn" onclick="changeSubView('score')">คะแนนเก็บ</button>
-          <button class="nav-pill-item" id="tabTaskBtn" onclick="changeSubView('task')">เช็คชิ้นงาน</button>
-          <button class="nav-pill-item" id="tabSlidesBtn" onclick="changeSubView('slides')">สไลด์สอน</button>
-          <button class="nav-pill-item" id="tabEvalBtn" onclick="changeSubView('eval')">ประเมินครู</button>
-        </div>
-
-        <div id="scoreSubView">
-          <div id="scoreMetricsContainer"></div>
-          <div class="grade-box-highlight">
-            <div class="text-muted small fw-medium">ระดับผลการเรียน (เกรด)</div>
-            <div class="display-3 fw-bold my-1" style="color: var(--navy-primary);" id="labelGradeDisplay">-</div>
-          </div>
-        </div>
-
-        <div id="taskSubView" style="display:none;">
-          <div id="taskCardsContainer"></div>
-        </div>
-
-        <div id="slidesSubView" style="display:none;">
-          <div id="slidesCardsContainer">
-            <div class="text-center p-4 text-muted">กำลังโหลดรายการสไลด์ประกอบการเรียน...</div>
-          </div>
-        </div>
-
-        <div id="evalSubView" style="display:none;">
-          <div class="card p-3 border-0 bg-light" style="border-radius:16px;">
-            <h6 class="fw-bold text-center mb-2" style="color: var(--navy-primary);">แบบประเมินและเสนอแนะคุณครูผู้สอน</h6>
-            <p class="text-muted text-center" style="font-size:0.82rem;">ความคิดเห็นของนักเรียนจะถูกเก็บเป็นความลับ เพื่อนำไปพัฒนาการเรียนการสอนให้ดียิ่งขึ้น</p>
-            <div class="mb-3">
-              <textarea id="evaluationTextarea" class="form-control border-0 bg-white p-3 shadow-none" rows="4" style="border-radius:12px;" placeholder="พิมพ์ความคิดเห็นหรือเสนอแนะถึงคุณครูที่นี่..."></textarea>
-            </div>
-            <button class="btn btn-action w-100 fw-bold" style="background: var(--gold-accent);" onclick="sendEvaluationData()">
-              <i class="fa-solid fa-paper-plane me-2"></i>ส่งความคิดเห็น
-            </button>
-          </div>
-        </div>
-
-        <button class="btn btn-link w-100 mt-4 text-secondary text-decoration-none small" onclick="triggerSignOutConfirmation()">
-          <i class="fa-solid fa-sign-out-alt me-1"></i> ออกจากระบบ
+        <button class="btn-primary" style="margin-top:26px;" onclick="processLogin()" id="loginActionBtn">
+          <i class="fa-solid fa-right-to-bracket me-2"></i>เข้าสู่ระบบ
         </button>
+        <div id="loginErrorMessage" class="alert-refined"></div>
       </div>
-    </div>
 
-    <div class="quote-footer">
-      "People Face Tradeoffs" คนเราจะเผชิญกับการได้อย่างเสียอย่างเสมอ<br>
-      <span class="fw-bold" style="font-size: 11px; color: var(--gold-accent);">10 Principles of Economics, Gregory Mankiw, Principles of Economics</span>
-    </div>
+      <div id="dashboardSection">
+        <div class="panel-card">
+          <div class="dash-header">
+            <div class="dash-avatar"><i class="fa-solid fa-user-graduate"></i></div>
+            <div>
+              <div class="badge-subject" id="labelSubjectDisplay">-</div>
+              <h5 id="labelNameDisplay">-</h5>
+              <small>เลขประจำตัว: <span id="labelIdDisplay">-</span> &nbsp;|&nbsp; ชั้นเรียน: <span id="labelClassDisplay">-</span></small>
+            </div>
+          </div>
 
+          <div class="tab-row">
+            <button class="tab-pill active" id="tabScoreBtn" onclick="changeSubView('score')">คะแนนเก็บ</button>
+            <button class="tab-pill" id="tabTaskBtn" onclick="changeSubView('task')">เช็คชิ้นงาน</button>
+            <button class="tab-pill" id="tabSlidesBtn" onclick="changeSubView('slides')">สไลด์สอน</button>
+            <button class="tab-pill" id="tabEvalBtn" onclick="changeSubView('eval')">ประเมินครู</button>
+          </div>
+
+          <div id="scoreSubView">
+            <div id="scoreMetricsContainer"></div>
+            <div class="grade-seal">
+              <div class="g-label">ระดับผลการเรียน (เกรด)</div>
+              <div class="g-value" id="labelGradeDisplay">-</div>
+            </div>
+          </div>
+
+          <div id="taskSubView" style="display:none;">
+            <div id="taskCardsContainer"></div>
+          </div>
+
+          <div id="slidesSubView" style="display:none;">
+            <div id="slidesCardsContainer">
+              <div style="text-align:center; padding:32px 0; color:var(--ink-soft);">กำลังโหลดรายการสไลด์ประกอบการเรียน...</div>
+            </div>
+          </div>
+
+          <div id="evalSubView" style="display:none;">
+            <div class="eval-card">
+              <h6 style="font-weight:700; text-align:center; margin-bottom:8px; color:var(--ink-navy); font-family:'Noto Serif Thai',serif;">แบบประเมินและเสนอแนะคุณครูผู้สอน</h6>
+              <p style="color:var(--ink-soft); text-align:center; font-size:0.82rem; margin-bottom:16px;">ความคิดเห็นของนักเรียนจะถูกเก็บเป็นความลับ เพื่อนำไปพัฒนาการเรียนการสอนให้ดียิ่งขึ้น</p>
+              <textarea id="evaluationTextarea" rows="4" placeholder="พิมพ์ความคิดเห็นหรือเสนอแนะถึงคุณครูที่นี่..."></textarea>
+              <button class="btn-primary btn-gold" style="margin-top:14px;" onclick="sendEvaluationData()">
+                <i class="fa-solid fa-paper-plane me-2"></i>ส่งความคิดเห็น
+              </button>
+            </div>
+          </div>
+
+          <button class="btn-ghost" style="margin-top:18px;" onclick="triggerSignOutConfirmation()">
+            <i class="fa-solid fa-sign-out-alt me-1"></i> ออกจากระบบ
+          </button>
+        </div>
+      </div>
+
+    </div>
   </div>
-  <a href="#" class="admin-footer-link" onclick="openAdminLogin(event)">สำหรับครู/แอดมิน</a>
+
 </div>
 
 <div class="admin-modal-backdrop" id="adminLoginModal">
   <div class="admin-modal">
-    <h6 class="fw-bold mb-3">เข้าสู่ระบบแอดมิน</h6>
-    <input type="password" id="adminPinInput" class="form-control text-center mb-3" placeholder="รหัสผ่าน" style="border-radius:12px;">
-    <button class="btn btn-action w-100 mb-2" onclick="verifyAdminPin()">เข้าสู่ระบบ</button>
-    <button class="btn btn-link w-100 text-secondary" onclick="closeAdminLogin()">ยกเลิก</button>
+    <h6 style="font-weight:700; margin-bottom:14px; font-family:'Noto Serif Thai',serif; color:var(--ink-navy);">เข้าสู่ระบบแอดมิน</h6>
+    <input type="password" id="adminPinInput" placeholder="รหัสผ่าน">
+    <button class="btn-primary" onclick="verifyAdminPin()">เข้าสู่ระบบ</button>
+    <button class="btn-ghost" onclick="closeAdminLogin()">ยกเลิก</button>
   </div>
 </div>
 
 <div id="adminApp">
-  <div class="admin-container">
-    <div class="admin-header">
-      <strong>แผงควบคุมแอดมิน</strong>
-      <button class="btn btn-sm btn-light" onclick="closeAdminApp()">ปิด</button>
+  <div class="admin-shell">
+    <div class="admin-topbar">
+      <strong><i class="fa-solid fa-shield-halved me-2"></i>แผงควบคุมแอดมิน</strong>
+      <button class="btn-close-admin" onclick="closeAdminApp()">ปิด</button>
     </div>
-    <div class="admin-body">
-      <div class="mb-3">
-        <select id="adminClassSelect" class="form-select" onchange="onAdminClassChange()"></select>
+
+    <div class="panel-card">
+      <div class="field-block">
+        <select id="adminClassSelect" class="select-refined" onchange="onAdminClassChange()"></select>
       </div>
-      <div class="admin-tabs">
-        <button class="admin-tab-item active" id="atOverview" onclick="adminChangeTab('overview')">ภาพรวม</button>
-        <button class="admin-tab-item" id="atSearch" onclick="adminChangeTab('search')">ค้นหานักเรียน</button>
-        <button class="admin-tab-item" id="atFeedback" onclick="adminChangeTab('feedback')">ข้อเสนอแนะ</button>
-        <button class="admin-tab-item" id="atSlides" onclick="adminChangeTab('slides')">สไลด์สอน</button>
-        <button class="admin-tab-item" id="atAssign" onclick="adminChangeTab('assign')">ชิ้นงาน</button>
+
+      <div class="tab-row">
+        <button class="tab-pill active" id="atOverview" onclick="adminChangeTab('overview')">ภาพรวม</button>
+        <button class="tab-pill" id="atSearch" onclick="adminChangeTab('search')">ค้นหานักเรียน</button>
+        <button class="tab-pill" id="atFeedback" onclick="adminChangeTab('feedback')">ข้อเสนอแนะ</button>
+        <button class="tab-pill" id="atSlides" onclick="adminChangeTab('slides')">สไลด์สอน</button>
+        <button class="tab-pill" id="atAssign" onclick="adminChangeTab('assign')">ชิ้นงาน</button>
       </div>
 
       <div id="adminOverviewView"></div>
 
       <div id="adminSearchView" style="display:none;">
-        <div class="input-group mb-3">
-          <input type="text" id="adminSearchInput" class="form-control" placeholder="พิมพ์ชื่อนักเรียน...">
-          <button class="btn btn-action" onclick="adminDoSearch()">ค้นหา</button>
+        <div class="input-group-refined field-block">
+          <input type="text" id="adminSearchInput" class="input-refined" placeholder="พิมพ์ชื่อนักเรียน...">
+          <button class="btn-inline" onclick="adminDoSearch()">ค้นหา</button>
         </div>
         <div id="adminSearchResults"></div>
       </div>
@@ -221,21 +673,23 @@
       <div id="adminFeedbackView" style="display:none;"></div>
 
       <div id="adminSlidesView" style="display:none;">
-        <div class="mb-2"><input type="text" id="slideGroup" class="form-control mb-2" placeholder="กลุ่มวิชา: ECON / Finan / MVSK"></div>
-        <div class="mb-2"><input type="text" id="slideTitle" class="form-control mb-2" placeholder="ชื่อสไลด์"></div>
-        <div class="mb-2"><input type="text" id="slideEmbedUrl" class="form-control mb-2" placeholder="ลิงก์ embed ของสไลด์ (URL)"></div>
-        <button class="btn btn-action w-100" onclick="adminAddSlideSubmit()">เพิ่มสไลด์</button>
-        <div id="adminSlideMsg" class="mt-2"></div>
+        <div class="field-block"><input type="text" id="slideGroup" class="input-refined" placeholder="กลุ่มวิชา: ECON / Finan / MVSK"></div>
+        <div class="field-block"><input type="text" id="slideTitle" class="input-refined" placeholder="ชื่อสไลด์"></div>
+        <div class="field-block"><input type="text" id="slideEmbedUrl" class="input-refined" placeholder="ลิงก์ embed ของสไลด์ (URL)"></div>
+        <button class="btn-primary" onclick="adminAddSlideSubmit()">เพิ่มสไลด์</button>
+        <div id="adminSlideMsg" class="msg-line"></div>
       </div>
 
       <div id="adminAssignView" style="display:none;">
-        <div class="mb-2"><input type="text" id="newAssignmentTitle" class="form-control mb-2" placeholder="ชื่อชิ้นงานใหม่"></div>
-        <button class="btn btn-action w-100 mb-3" onclick="adminAddAssignmentSubmit()">เพิ่มชิ้นงาน</button>
-        <hr>
-        <div class="mb-2"><input type="text" id="assignStudentId" class="form-control mb-2" placeholder="กรอกเลขประจำตัวนักเรียนแล้วกด Enter" onkeydown="if(event.key==='Enter'){event.preventDefault();adminLoadStudentAssignments();}"></div>
-        <button class="btn btn-sm btn-outline-secondary w-100 mb-3" onclick="adminLoadStudentAssignments()">โหลดรายการชิ้นงานของนักเรียนคนนี้</button>
-        <div id="adminAssignmentList"></div>
-        <div id="adminAssignMsg" class="mt-2"></div>
+        <div class="field-block"><input type="text" id="newAssignmentTitle" class="input-refined" placeholder="ชื่อชิ้นงานใหม่"></div>
+        <button class="btn-primary" style="margin-bottom:18px;" onclick="adminAddAssignmentSubmit()">เพิ่มชิ้นงาน</button>
+        <div class="foil-line"></div>
+        <div class="field-block">
+          <input type="text" id="assignStudentId" class="input-refined" placeholder="กรอกเลขประจำตัวนักเรียนแล้วกด Enter" onkeydown="if(event.key==='Enter'){event.preventDefault();adminLoadStudentAssignments();}">
+        </div>
+        <button class="btn-outline-refined" style="width:100%; padding:12px;" onclick="adminLoadStudentAssignments()">โหลดรายการชิ้นงานของนักเรียนคนนี้</button>
+        <div id="adminAssignmentList" style="margin-top:16px;"></div>
+        <div id="adminAssignMsg" class="msg-line"></div>
       </div>
     </div>
   </div>
@@ -339,7 +793,7 @@
       { key: 'กลางภาค (20)', val: res.scores.mid },
       { key: 'หลังกลางภาค (20)', val: res.scores.post },
       { key: 'ปลายภาค (20)', val: res.scores.final },
-      { key: 'คะแนนบวกพิเศษ', val: res.scores.bonus }
+      { key: 'คะแนนบวกพิเภษ', val: res.scores.bonus }
     ];
     metricsContainer.innerHTML = '';
     labels.forEach(item => {
@@ -648,6 +1102,5 @@
       alert(res.message);
     });
   }
-</script>
-</body>
+</script></body>
 </html>
