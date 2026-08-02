@@ -790,11 +790,16 @@
     const metricsContainer = document.getElementById('scoreMetricsContainer');
     const labels = [
       { key: 'ก่อนกลางภาค (30)', val: res.scores.pre },
-      { key: 'กลางภาค (20)', val: res.scores.mid },
+      { key: 'กลางภาค (20)', val: res.scores.mid }
+    ];
+    if (res.scores.makeup) {
+      labels.push({ key: 'แก้กลางภาค', val: res.scores.makeup });
+    }
+    labels.push(
       { key: 'หลังกลางภาค (20)', val: res.scores.post },
       { key: 'ปลายภาค (30)', val: res.scores.final },
       { key: 'รวมคะแนน (100)', val: res.scores.total }
-    ];
+    );
     metricsContainer.innerHTML = '';
     labels.forEach(item => {
       metricsContainer.innerHTML += `
