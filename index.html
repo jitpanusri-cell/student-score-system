@@ -792,23 +792,29 @@
 
     const metricsContainer = document.getElementById('scoreMetricsContainer');
     const labels = [
-      { key: 'ก่อนกลางภาค (30)', val: res.scores.pre },
-      { key: 'กลางภาค (20)', val: res.scores.mid }
+      { key: 'คะแนนเก็บก่อนกลางภาค (30)', val: res.scores.pre },
+      { key: 'Midterm Project (20)', val: res.scores.preProject, sub: true },
+      { key: 'ชิ้นงาน (10)', val: res.scores.preWork, sub: true },
+      { key: 'สอบกลางภาค (20)', val: res.scores.midExam }
     ];
     if (res.scores.makeup) {
-      labels.push({ key: 'แก้กลางภาค', val: res.scores.makeup });
+      labels.push({ key: 'แก้กลางภาค (ไม่เกิน 12)', val: res.scores.makeup });
     }
     labels.push(
-      { key: 'หลังกลางภาค (20)', val: res.scores.post },
-      { key: 'ปลายภาค (30)', val: res.scores.final },
+      { key: 'รวมคะแนนสอบกลางภาค (20)', val: res.scores.mid },
+      { key: 'คะแนนเก็บหลังกลางภาค (20)', val: res.scores.post },
+      { key: 'ปลายภาค (ไม่แจ้งคะแนน 30)', val: res.scores.final },
       { key: 'รวมคะแนน (100)', val: res.scores.total }
     );
     metricsContainer.innerHTML = '';
     labels.forEach(item => {
+      const subStyle = item.sub ? ' style="padding-left:18px; opacity:0.75;"' : '';
+      const titleSize = item.sub ? ' style="font-size:0.85rem;"' : '';
+      const valSize = item.sub ? ' style="font-size:0.92rem;"' : '';
       metricsContainer.innerHTML += `
-        <div class="metric-row">
-          <span class="metric-title">${item.key}</span>
-          <span class="metric-val">${item.val}</span>
+        <div class="metric-row"${subStyle}>
+          <span class="metric-title"${titleSize}>${item.sub ? '– ' : ''}${item.key}</span>
+          <span class="metric-val"${valSize}>${item.val}</span>
         </div>`;
     });
 
